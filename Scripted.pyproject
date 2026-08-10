@@ -1,0 +1,8 @@
+{
+    "files": [
+        "MainWindow.py",
+        "SearchCompleter.py",
+        "SearchField.py",
+        "main.py"
+    ]
+}
