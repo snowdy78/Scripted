@@ -5,28 +5,16 @@ from Dropdown import Dropdown
 from ParseTypes import ParseParams
 
 class MainWindow(QWidget):
-    it_topics = [
-        "Python Programming",
-        "PyQt6 Desktop Apps",
-        "PySide6 Interfaces",
-        "Qt Designer Layouts",
-        "JavaScript Web Development",
-        "TypeScript Applications",
-        "React Frontend Framework",
-        "Node.js Backend Server",
-        "Data Science Analysis",
-        "Machine Learning Models",
-        "Deep Learning Networks",
-        "Artificial Intelligence Systems",
-        "SQL Database Management",
-        "NoSQL Data Storage",
-        "Git Version Control",
-        "Docker Containerization",
-        "Cloud Computing Services",
-        "Linux System Administration",
-        "Mobile App Development",
-        "Cybersecurity Protocols"
-    ]
+    it_topics = {
+        "Мобильная карта": ParseParams('https://wiki.yandex.ru/homepage/1d169aa832c9/proekty-ogl/mobilnaja-karta-1/'),
+        "Агророс Банк": ParseParams('https://wiki.yandex.ru/homepage/1d169aa832c9/proekty-ogl/agroros-bank/'),
+        "Термекс": ParseParams('https://wiki.yandex.ru/homepage/1d169aa832c9/proekty-ogl/termeks/'),
+        "Азбука Вкуса": ParseParams('https://wiki.yandex.ru/homepage/1d169aa832c9/proekty-ogl/azbuka-vkusa/'),
+        "Благо": ParseParams('https://wiki.yandex.ru/homepage/1d169aa832c9/proekty-ogl/blago/'),
+        "Мой Оператор": ParseParams('https://wiki.yandex.ru/homepage/1d169aa832c9/proekty-ogl/mojj-operator/'),
+        "Газпром ГМТ": ParseParams('https://wiki.yandex.ru/homepage/1d169aa832c9/proekty-ogl/gazprom-gmt/'),
+        "Внутренняя ГЛ": ParseParams('https://wiki.yandex.ru/homepage/1d169aa832c9/proekty-ogl/vnutrennjaja-gl/')
+    }
     def __init__(self):
         super().__init__()
         self.setWindowTitle("Пример с QLineEdit")
