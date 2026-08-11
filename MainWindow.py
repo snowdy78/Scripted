@@ -1,7 +1,8 @@
 # This Python file uses the following encoding: utf-8
 
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QPushButton
-from SearchField import SearchField
+from Dropdown import Dropdown
+from ParseTypes import ParseParams
 
 class MainWindow(QWidget):
     it_topics = [
@@ -29,14 +30,14 @@ class MainWindow(QWidget):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("Пример с QLineEdit")
-        self.resize(300, 150)
+        self.resize(800, 600)
 
         # 1. Создаем вертикальный макет (Layout)
         layout = QVBoxLayout()
 
         # 2. Создаем поле ввода Line Edit
-        self.search = SearchField(items = self.it_topics)
-        layout.addWidget(self.search) # Добавляем в макет
+        self.dropdown = Dropdown(items = list(self.it_topics.keys()))
+        layout.addWidget(self.dropdown) # Добавляем в макет
 
         # 3. Создаем кнопку для считывания текста
         self.btn = QPushButton("Показать текст")
@@ -48,6 +49,6 @@ class MainWindow(QWidget):
 
     def print_text(self):
         # Метод .text() забирает строку из QLineEdit
-        entered_text = self.search.text()
+        entered_text = self.dropdown.currentData()
         print(f"Пользователь ввел: {entered_text}")
 
