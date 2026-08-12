@@ -1,4 +1,5 @@
 import datetime
+from typing import TypedDict
 
 class ParseParams:
     def __init__(self, url: str):
@@ -12,10 +13,47 @@ class ParseRequestData:
         self.headers = headers
 
 class ParseResponseData:
-    def __init__(self, params: ParseParams, content, date_parsed: datetime.datetime | None = None):
+    def __init__(self, params: ParseParams, content, date_parsed: datetime.datetime | None = datetime.datetime.now()):
         self.params = params
         self.content = content
         self.date_parsed = date_parsed
+
+class Script(TypedDict):
+    url: str
+    topic: str
+    subtopic: str | None
+    content: str | None
+    date_parsed: datetime.datetime | None
+
+class Subtopic(TypedDict):
+    name: str
+    topic: str
+
+class Topic(TypedDict):
+    name: str
+    subtopics: list[str]
+
+def createScript(url: str, topic: str, subtopic: str | None = None, content: str | None = None, date_parsed: datetime.datetime | None = None) -> Script:
+    return {
+        "url": url,
+        "topic": topic,
+        "subtopic": subtopic,
+        "content": content,
+        "date_parsed": date_parsed
+    }
+
+def createSubtopic(subtopic: str, topic: str) -> Subtopic:
+    return {
+        "subtopic": subtopic,
+        "topic": topic
+    }
+
+def createTopic(topic: str, subtopics: list[str]) -> Topic:
+    return {
+        "topic": topic,
+        "subtopics": [createSubtopic(subtopic, topic) for subtopic in subtopics]
+    }
+
 
 class Cookie:
     def __init__(self, name: str, value: str, domain: str, path: str ='/'):

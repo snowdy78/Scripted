@@ -1,11 +1,11 @@
 
 import playwright.sync_api as pw_sync_api
 from playwright.sync_api import sync_playwright
-from ParseTypes import ParseRequestData, Cookie, ParseResponseData
+from ParseTypes import ParseRequestData, Cookie, ParseResponseData, createScript
 from Database import Database
 from typing import List
 
-def parse_script(request: ParseRequestData):
+def parse_script(topic: str, request: ParseRequestData):
     cors_domains = ['.yandex.ru', 'wiki.yandex.ru']
     url = request.params.url
     if not [i for i in cors_domains if url.find(i) != -1]:
@@ -64,7 +64,11 @@ def parse_script(request: ParseRequestData):
         """)
 
         all_text = page.locator(wiki_layout_selector).inner_text()
+        response = ParseResponseData(
+            request.params, 
+            all_text
+        )
         # Save parse results to Database
         with Database() as db:
-            db.insertScriptData(Database.ScriptData(ParseResponseData(request.params, all_text)))
+            db.insertScriptData(createScript(response.params.url, topic, response.content, response.date_parsed))
         browser.close()
