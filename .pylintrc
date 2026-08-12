@@ -1,0 +1,36 @@
+[MAIN]
+# Optimize execution speed using multiple background processes (0 auto-detects CPU cores)
+jobs=0
+
+# Files or directories to skip from linting
+ignore=venv,dist,build,tests
+
+# Enable plugins (e.g., to support frameworks like Django or Flask)
+load-plugins=
+
+[MESSAGES CONTROL]
+# Disable specific warning rules that you find overly strict or unnecessary
+disable=
+    missing-docstring,
+    invalid-name,
+    too-many-arguments,
+    duplicate-code
+
+[FORMAT]
+# Match standard PEP 8 formatting preferences
+max-line-length=88
+max-module-lines=1000
+
+[BASIC]
+# Regex patterns to enforce strict naming conventions
+argument-rgx=[a-z_][a-z0-9_]{2,30}$
+attr-rgx=[a-z_][a-z0-9_]{2,30}$
+function-rgx=[a-z_][a-z0-9_]{2,30}$
+variable-rgx=[a-z_][a-z0-9_]{2,30}$
+
+[DESIGN]
+# Control the structural complexity thresholds of your classes and functions
+max-args=5
+max-attributes=7
+max-locals=15
+max-returns=6
