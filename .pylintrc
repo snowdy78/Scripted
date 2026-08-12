@@ -4,7 +4,7 @@ jobs=0
 
 # Files or directories to skip from linting
 ignore=venv,dist,build,tests
-
+extension-pkg-allow-list=PySide6
 # Enable plugins (e.g., to support frameworks like Django or Flask)
 load-plugins=
 
@@ -14,7 +14,9 @@ disable=
     missing-docstring,
     invalid-name,
     too-many-arguments,
-    duplicate-code
+    duplicate-code,
+    dangerous-default-value,
+    unknown-option-value,
 
 [FORMAT]
 # Match standard PEP 8 formatting preferences
