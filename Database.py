@@ -1,6 +1,7 @@
+import datetime
+import typing
 import hashlib
 import mysql.connector
-from typing import Callable
 from ParseTypes import Script, Topic, Subtopic
 
 def hashUrl(url: str):
@@ -47,74 +48,142 @@ class Database:
 
     @staticmethod
     def _asScript(db_script) -> Script:
-        return {
-            "url": db_script['url'],
-            "topic_id": db_script['topic_id'],
-            "subtopic_id": db_script['subtopic_id'],
-            "content": db_script['content'], 
-            "date_parsed": db_script['date_parsed']
-        }
+        return Script(
+            db_script['url'],
+            db_script['topic_id'],
+            db_script['subtopic_id'],
+            db_script['content'], 
+            db_script['date_parsed']
+        )
 
     @staticmethod
     def _asSubtopic(db_subtopic) -> Subtopic:
-        return {
-            "id": db_subtopic['id'],
-            "name": db_subtopic['name'],
-            "topic_id": db_subtopic['topic_id']
-        }
+        return Subtopic(
+            db_subtopic['id'],
+            db_subtopic['name'],
+            db_subtopic['topic_id']
+        )
 
     @staticmethod
     def _asTopic(db_topic) -> Topic:
-        return {
-            "id": db_topic['id'],
-            "name": db_topic['name']
-        }
+        return Topic(
+            db_topic['id'],
+            db_topic['name']
+        )
 
     @staticmethod
     def _applyFilters(query: str, filters: list[str]) -> str:
         return query.join(" WHERE ".join(i.join(" ") for i in filters))
 
-    def _get(self, table_name: str, filters: list[str], func: Callable):
+    def _get(
+        self,
+        table_name: str,
+        filters: list[str],
+        data: tuple[typing.Any],
+        castFunc: typing.Callable
+    ):
         result = self.cursor.execute(
-            self._applyFilters("SELECT * FROM ".join(table_name), filters)
+            self._applyFilters("SELECT * FROM ".join(table_name), filters),
+            data
         )
         if result is None:
             raise ValueError("Result is NoneType")
-        return list(func(row) for row in result)
-    def insertScriptData(self, script_data: Script):
-        script_data['topic_id'] = script_data['topic_id'].upper()
-        subtopic = script_data['subtopic_id']
-        script_data['subtopic_id'] = subtopic if not subtopic else subtopic.upper()
-        print(f"Inserting script data: {script_data.values()}")
+        return list(castFunc(row) for row in result)
+
+    def _getIdIfNotExists(
+        self,
+        table_name: str,
+        name: str | int | None,
+        insertFunc: typing.Callable[[str], None],
+        castFunc: typing.Callable,
+        getIdFunc: typing.Callable[[typing.Any], str] = lambda x: str(x.id)
+    ) -> str:
+        if name is None:
+            return "NULL"
+        if name is int:
+            return str(name)
+        if name is not str:
+            raise TypeError(f"Expected str/int/None, got {type(name)}")
+        insertFunc(name)
+        return getIdFunc(self._get(table_name, ['name=%s'], (name, ), castFunc)[0])
+
+    def getTopicIdIfNotExists(
+        self,
+        name: str | int | None
+    ) -> str:
+        return self._getIdIfNotExists(
+            "topics",
+            name,
+            self.insertTopic,
+            self._asTopic
+        )
+
+    def getSubtopicIdIfNotExists(
+        self,
+        name: str | int | None,
+        topic_id: str
+    ) -> str:
+        return self._getIdIfNotExists(
+            "subtopics",
+            name,
+            lambda name: self.insertSubtopic(name, topic_id),
+            self._asSubtopic
+        )
+
+    def insertScriptData(
+        self,
+        url: str,
+        topic: int | str,
+        subtopic: int | str | None,
+        content: str = "",
+        date_parsed: datetime.datetime = datetime.datetime.now()
+    ):
+        topic_id: str = self.getTopicIdIfNotExists(topic)
+        print("Inserting script data...")
+        subtopic_id: str = self.getSubtopicIdIfNotExists(subtopic, topic_id)
         self.cursor.execute(
-            """INSERT INTO scripts (url, topic_id, subtopic_id, content, date_parsed) 
-            VALUES (%s, %s, %s, %s, %s)""",
+            """INSERT IGNORE INTO scripts 
+            (url, topic_id, subtopic_id, content, date_parsed) 
+            VALUES (%s, %s, %s, %s, %s) ON DUPLICATE KEY UPDATE 
+            date_parsed = VALUES(date_parsed), content = VALUES(content)""",
             (
-                script_data['url'],
-                script_data['topic'],
-                script_data['subtopic'],
-                script_data['content'],
-                script_data['date_parsed'],
+                url,
+                topic_id,
+                subtopic_id or "NULL",
+                content,
+                date_parsed,
             )
         )
         self.db.commit()
 
-    def insertTopic(self, topic: Topic):
-        self.cursor.executemany(
+    def insertTopic(self, name: str):
+        self.cursor.execute(
             """INSERT INTO topics (id, name) VALUES 
-            (DEFAULT, %s) ON DUPLICATE KEY UPDATE datetime""",
-            topic['id']
+            (DEFAULT, %s)""",
+            (name)
         )
         self.db.commit()
 
-    def getScripts(self, filters: list[str]) -> list[Script]:
-        return self._get("scripts", filters, self._asScript)
+    def insertSubtopic(self, name: str, topic: int | str):
+        topic_id: str = self.getTopicIdIfNotExists(topic)
+        self.cursor.execute(
+            """INSERT INTO subtopics (id, topic_id, name) VALUES 
+            (DEFAULT, %s, %s)""",
+            (topic_id, name)
+        )
+        self.db.commit()
 
-    def getTopics(self, filters: list) -> list[Topic]:
-        return self._get("topics", filters, self._asTopic)
+    def getScripts(self, filters: list[str], data: tuple[typing.Any]) -> list[Script]:
+        return self._get("scripts", filters, data, self._asScript)
 
-    def getSubtopics(self, filters: list) -> list[Subtopic]:
-        return self._get("subtopic", filters, self._asSubtopic)
+    def getTopics(self, filters: list[str], data: tuple[typing.Any]) -> list[Topic]:
+        return self._get("topics", filters, data, self._asTopic)
+
+    def getSubtopics(
+        self,filters: list[str],
+        data: tuple[typing.Any]
+    ) -> list[Subtopic]:
+        return self._get("subtopic", filters, data, self._asSubtopic)
 
     def close(self):
         self.cursor.close()
