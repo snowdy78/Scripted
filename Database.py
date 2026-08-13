@@ -1,11 +1,11 @@
-import mysql.connector
 import hashlib
-import datetime
-import typing
-from ParseTypes import ParseResponseData, Script, Topic, Subtopic
+import mysql.connector
+from typing import Callable
+from ParseTypes import Script, Topic, Subtopic
 
 def hashUrl(url: str):
     return hashlib.sha1(url.encode("utf-8")).hexdigest()
+
 
 class Database:
     HOST = "localhost"
@@ -47,73 +47,74 @@ class Database:
 
     @staticmethod
     def _asScript(db_script) -> Script:
-        script: Script = {
+        return {
             "url": db_script['url'],
-            "topic": db_script['topic'],
-            "subtopic": db_script['subtopic'],
+            "topic_id": db_script['topic_id'],
+            "subtopic_id": db_script['subtopic_id'],
             "content": db_script['content'], 
             "date_parsed": db_script['date_parsed']
         }
-        return script
 
     @staticmethod
     def _asSubtopic(db_subtopic) -> Subtopic:
-        subtopic: Subtopic = {
-            "name": db_subtopic['subtopic'],
-            "topic": db_subtopic['topic']
+        return {
+            "id": db_subtopic['id'],
+            "name": db_subtopic['name'],
+            "topic_id": db_subtopic['topic_id']
         }
-        return subtopic
+
+    @staticmethod
+    def _asTopic(db_topic) -> Topic:
+        return {
+            "id": db_topic['id'],
+            "name": db_topic['name']
+        }
+
     @staticmethod
     def _applyFilters(query: str, filters: list[str]) -> str:
         return query.join(" WHERE ".join(i.join(" ") for i in filters))
 
+    def _get(self, table_name: str, filters: list[str], func: Callable):
+        result = self.cursor.execute(
+            self._applyFilters("SELECT * FROM ".join(table_name), filters)
+        )
+        if result is None:
+            raise ValueError("Result is NoneType")
+        return list(func(row) for row in result)
     def insertScriptData(self, script_data: Script):
-        script_data['topic'] = script_data['topic'].upper()
-        script_data['subtopic'] = script_data['subtopic'] if not script_data['subtopic'] else script_data['subtopic'].upper()
+        script_data['topic_id'] = script_data['topic_id'].upper()
+        subtopic = script_data['subtopic_id']
+        script_data['subtopic_id'] = subtopic if not subtopic else subtopic.upper()
         print(f"Inserting script data: {script_data.values()}")
         self.cursor.execute(
-            "INSERT INTO scripts (url, topic, subtopic, content, date_parsed) VALUES (%s, %s, %s, %s, %s)",
-            (script_data['url'], script_data['topic'], script_data['subtopic'], script_data['content'], script_data['date_parsed'], )
+            """INSERT INTO scripts (url, topic_id, subtopic_id, content, date_parsed) 
+            VALUES (%s, %s, %s, %s, %s)""",
+            (
+                script_data['url'],
+                script_data['topic'],
+                script_data['subtopic'],
+                script_data['content'],
+                script_data['date_parsed'],
+            )
         )
         self.db.commit()
 
-    def getScriptData(self, url: str) -> Script:
-        self.cursor.execute("SELECT * FROM scripts WHERE url = %s", (hashUrl(url),))
-        db_script = self.cursor.fetchone()
-        script: Script = self._asScript(db_script)
-        return script
-
     def insertTopic(self, topic: Topic):
-        if None in topic['subtopics'] or "" in topic['subtopics']:
-            raise ValueError("Subtopic is NoneType")
         self.cursor.executemany(
-            "INSERT IGNORE INTO subtopics (name, topic) VALUES (DEFAULT, %s, %s)", tuple((
-                (sub_name, topic['name']) for sub_name in topic['subtopics']
-            ))
-        )
-        self.cursor.executemany(
-            "INSERT INTO topics (id, name, subtopic) VALUES (DEFAULT, %s, %s) ON DUPLICATE KEY UPDATE datetime", 
-            tuple(((topic['name'], sub_name) for sub_name in topic['subtopics']))
+            """INSERT INTO topics (id, name) VALUES 
+            (DEFAULT, %s) ON DUPLICATE KEY UPDATE datetime""",
+            topic['id']
         )
         self.db.commit()
 
     def getScripts(self, filters: list[str]) -> list[Script]:
-        scripts = []
-        result = self.cursor.execute(self._applyFilters("SELECT * FROM scripts", filters))
-        if result is None:
-            raise ValueError("Result is NoneType")
-        for row in result:
-            scripts.append(self._asScript(row))
-        return scripts
+        return self._get("scripts", filters, self._asScript)
 
     def getTopics(self, filters: list) -> list[Topic]:
-        topics = []
-        result = self.cursor.execute(self._applyFilters("SELECT * FROM topics", filters))
-        if result is None:
-            raise ValueError("Result is NoneType")
-        for row in result:
-            topics.append(self._asTopic(row))
-        return topics
+        return self._get("topics", filters, self._asTopic)
+
+    def getSubtopics(self, filters: list) -> list[Subtopic]:
+        return self._get("subtopic", filters, self._asSubtopic)
 
     def close(self):
         self.cursor.close()

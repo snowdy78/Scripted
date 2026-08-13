@@ -10,10 +10,12 @@ class Dropdown(QComboBox):
         self.setEditable(True)
         completer = SearchCompleter(self.items)
         self.setCompleter(completer)
+        if items:
+            self.addItems(items)
 
     def focusInEvent(self, event):
         super().focusInEvent(event)
-        window = self.window().windowHandle()
+        self.showPopup()
 
     def onTextChanged(self, text):
         pass

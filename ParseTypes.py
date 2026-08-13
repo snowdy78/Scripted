@@ -20,18 +20,19 @@ class ParseResponseData:
 
 class Script(TypedDict):
     url: str
-    topic: str
-    subtopic: str | None
+    topic_id: int
+    subtopic_id: int | None
     content: str | None
     date_parsed: datetime.datetime | None
 
 class Subtopic(TypedDict):
+    id: int
     name: str
-    topic: str
+    topic_id: str
 
 class Topic(TypedDict):
+    id: int
     name: str
-    subtopics: list[str]
 
 def createScript(url: str, topic: str, subtopic: str | None = None, content: str | None = None, date_parsed: datetime.datetime | None = None) -> Script:
     return {
