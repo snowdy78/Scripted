@@ -13,7 +13,8 @@ class MainWindow(QWidget):
         "Благо": ParseParams('https://wiki.yandex.ru/homepage/1d169aa832c9/proekty-ogl/blago/'),
         "Мой Оператор": ParseParams('https://wiki.yandex.ru/homepage/1d169aa832c9/proekty-ogl/mojj-operator/'),
         "Газпром ГМТ": ParseParams('https://wiki.yandex.ru/homepage/1d169aa832c9/proekty-ogl/gazprom-gmt/'),
-        "Внутренняя ГЛ": ParseParams('https://wiki.yandex.ru/homepage/1d169aa832c9/proekty-ogl/vnutrennjaja-gl/')
+        "Внутренняя ГЛ": ParseParams('https://wiki.yandex.ru/homepage/1d169aa832c9/proekty-ogl/vnutrennjaja-gl/'),
+        "Пицца Ханс": ParseParams('https://wiki.yandex.ru/homepage/1d169aa832c9/proekty-ogl/picca-xans/picca-xans-skript/')
     }
     def __init__(self):
         super().__init__()
@@ -37,6 +38,9 @@ class MainWindow(QWidget):
 
     def print_text(self):
         # Метод .text() забирает строку из QLineEdit
-        entered_text = self.dropdown.currentData()
+        line_edit = self.dropdown.lineEdit()
+        if line_edit is None:
+            return
+        entered_text = line_edit.text()
         print(f"Пользователь ввел: {entered_text}")
 
