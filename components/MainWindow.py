@@ -1,11 +1,12 @@
 # This Python file uses the following encoding: utf-8
 
-from PySide6.QtWidgets import QWidget, QVBoxLayout, QPushButton
-from Dropdown import Dropdown
-from ParseTypes import ParseParams
+from PySide6.QtWidgets import QWidget, QVBoxLayout, QPushButton, QLabel
+from components.Dropdown import Dropdown
+from ParseTypes import ParseParams, ParseRequestData
+from ScriptParser import parse_script
 
 class MainWindow(QWidget):
-    it_topics = {
+    topics = {
         "Мобильная карта": ParseParams('https://wiki.yandex.ru/homepage/1d169aa832c9/proekty-ogl/mobilnaja-karta-1/'),
         "Агророс Банк": ParseParams('https://wiki.yandex.ru/homepage/1d169aa832c9/proekty-ogl/agroros-bank/'),
         "Термекс": ParseParams('https://wiki.yandex.ru/homepage/1d169aa832c9/proekty-ogl/termeks/'),
@@ -25,13 +26,15 @@ class MainWindow(QWidget):
         layout = QVBoxLayout()
 
         # 2. Создаем поле ввода Line Edit
-        self.dropdown = Dropdown(items = list(self.it_topics.keys()))
+        self.dropdown = Dropdown(items = list(self.topics.keys()))
         layout.addWidget(self.dropdown) # Добавляем в макет
 
+        self.alert_label = QLabel()
+        self.alert_label.setStyleSheet("color: #e00;")
+        self.button = QPushButton("Parse")
         # 3. Создаем кнопку для считывания текста
-        self.btn = QPushButton("Показать текст")
-        self.btn.clicked.connect(self.print_text) # Привязываем функцию к клику
-        layout.addWidget(self.btn) # Добавляем в макет
+        self.button.clicked.connect(self.print_text) # Привязываем функцию к клику
+        layout.addWidget(self.button) # Добавляем в макет
 
         # Устанавливаем макет для главного окна
         self.setLayout(layout)
@@ -42,5 +45,7 @@ class MainWindow(QWidget):
         if line_edit is None:
             return
         entered_text = line_edit.text()
-        print(f"Пользователь ввел: {entered_text}")
-
+        parse_data = self.topics[entered_text]
+        if parse_data is None:
+            self.alert_label.setText("Тематика не найдена. Невозможно парсить.")
+        parse_script(entered_text, ParseRequestData(parse_data))
