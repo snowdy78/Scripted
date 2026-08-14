@@ -22,58 +22,63 @@ class Database:
         )
         self.cursor = self.db.cursor()
         self.cursor.execute("""
-            CREATE TABLE IF NOT EXISTS topics (
+            CREATE TABLE IF NOT EXISTS `topics` (
                 id INT AUTO_INCREMENT PRIMARY KEY,
                 name TEXT NOT NULL
-            )
-            CREATE TABLE IF NOT EXISTS subtopics (
+            );
+        """)
+        self.cursor.execute("""
+            CREATE TABLE IF NOT EXISTS `subtopics` (
                 id INT AUTO_INCREMENT PRIMARY KEY,
                 topic_id INT NOT NULL,
-                name  VARCHAR(255) NOT NULL,
+                name  TEXT NOT NULL,
                 FOREIGN KEY (topic_id) REFERENCES topics (id) ON DELETE CASCADE ON UPDATE CASCADE
-            )
-            CREATE TABLE IF NOT EXISTS scripts (
+            );
+        """)
+        self.cursor.execute("""
+            CREATE TABLE IF NOT EXISTS `scripts` (
                 url VARCHAR(500) PRIMARY KEY,
                 topic_id INT NOT NULL,
                 subtopic_id INT NULL,
-                content TEXT NULL,
+                content LONGTEXT NULL,
                 date_parsed DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
                 FOREIGN KEY (topic_id) REFERENCES topics (id) ON DELETE CASCADE ON UPDATE CASCADE,
-                FOREIGN KEY (subtopic) REFERENCES subtopics (name) ON DELETE CASCADE ON UPDATE CASCADE NULL,
-            )
-            
-            """
-        )
+                FOREIGN KEY (subtopic_id) REFERENCES subtopics (id) ON DELETE SET NULL ON UPDATE CASCADE
+            );
+        """)
         self.db.commit()
 
     @staticmethod
     def _asScript(db_script) -> Script:
         return Script(
-            db_script['url'],
-            db_script['topic_id'],
-            db_script['subtopic_id'],
-            db_script['content'], 
-            db_script['date_parsed']
+            db_script[0],
+            db_script[1],
+            db_script[2],
+            db_script[3],
+            db_script[4]
         )
 
     @staticmethod
     def _asSubtopic(db_subtopic) -> Subtopic:
         return Subtopic(
-            db_subtopic['id'],
-            db_subtopic['name'],
-            db_subtopic['topic_id']
+            db_subtopic[0],
+            db_subtopic[1],
+            db_subtopic[2]
         )
 
     @staticmethod
     def _asTopic(db_topic) -> Topic:
         return Topic(
-            db_topic['id'],
-            db_topic['name']
+            db_topic[0],
+            db_topic[1]
         )
 
     @staticmethod
     def _applyFilters(query: str, filters: list[str]) -> str:
-        return query.join(" WHERE ".join(i.join(" ") for i in filters))
+        if not filters:
+            return query
+        where_clause = " AND ".join(filters)
+        return f"{query} WHERE {where_clause}"
 
     def _get(
         self,
@@ -82,13 +87,15 @@ class Database:
         data: tuple[typing.Any],
         castFunc: typing.Callable
     ):
-        result = self.cursor.execute(
-            self._applyFilters("SELECT * FROM ".join(table_name), filters),
+        query = self._applyFilters(f"SELECT * FROM {table_name}", filters)
+        self.cursor.execute(
+            query,
             data
         )
-        if result is None:
+        rows = self.cursor.fetchall()
+        if rows is None:
             raise ValueError("Result is NoneType")
-        return list(castFunc(row) for row in result)
+        return list(castFunc(row) for row in rows)
 
     def _getIdIfNotExists(
         self,
@@ -97,20 +104,22 @@ class Database:
         insertFunc: typing.Callable[[str], None],
         castFunc: typing.Callable,
         getIdFunc: typing.Callable[[typing.Any], str] = lambda x: str(x.id)
-    ) -> str:
+    ) -> str | None:
         if name is None:
-            return "NULL"
-        if name is int:
+            return None
+        if isinstance(name, int):
             return str(name)
-        if name is not str:
+        if not isinstance(name, str):
             raise TypeError(f"Expected str/int/None, got {type(name)}")
-        insertFunc(name)
+        result = self._get(table_name, ['name=%s'], (name, ), castFunc)
+        if not result:
+            insertFunc(name)
         return getIdFunc(self._get(table_name, ['name=%s'], (name, ), castFunc)[0])
 
     def getTopicIdIfNotExists(
         self,
         name: str | int | None
-    ) -> str:
+    ) -> str | None:
         return self._getIdIfNotExists(
             "topics",
             name,
@@ -122,7 +131,7 @@ class Database:
         self,
         name: str | int | None,
         topic_id: str
-    ) -> str:
+    ) -> str | None:
         return self._getIdIfNotExists(
             "subtopics",
             name,
@@ -135,40 +144,43 @@ class Database:
         url: str,
         topic: int | str,
         subtopic: int | str | None,
-        content: str = "",
-        date_parsed: datetime.datetime = datetime.datetime.now()
+        content: str = ""
     ):
-        topic_id: str = self.getTopicIdIfNotExists(topic)
         print("Inserting script data...")
-        subtopic_id: str = self.getSubtopicIdIfNotExists(subtopic, topic_id)
+        topic_id: str | None = self.getTopicIdIfNotExists(topic)
+        if not topic_id:
+            raise ValueError(f"Topic id is None ({topic_id})")
+        subtopic_id: str | None = self.getSubtopicIdIfNotExists(subtopic, topic_id)
         self.cursor.execute(
-            """INSERT IGNORE INTO scripts 
+            """INSERT INTO scripts 
             (url, topic_id, subtopic_id, content, date_parsed) 
-            VALUES (%s, %s, %s, %s, %s) ON DUPLICATE KEY UPDATE 
-            date_parsed = VALUES(date_parsed), content = VALUES(content)""",
+            VALUES (%s, %s, %s, %s, DEFAULT) AS item ON DUPLICATE KEY UPDATE 
+            date_parsed = DEFAULT, content = item.content""",
             (
                 url,
                 topic_id,
-                subtopic_id or "NULL",
-                content,
-                date_parsed,
+                subtopic_id,
+                content
             )
         )
         self.db.commit()
+        print("Inserting done!")
 
     def insertTopic(self, name: str):
         self.cursor.execute(
             """INSERT INTO topics (id, name) VALUES 
-            (DEFAULT, %s)""",
-            (name)
+            (DEFAULT, %s) AS item ON DUPLICATE KEY UPDATE name = item.name""",
+            (name, )
         )
         self.db.commit()
 
     def insertSubtopic(self, name: str, topic: int | str):
-        topic_id: str = self.getTopicIdIfNotExists(topic)
+        topic_id: str | None = self.getTopicIdIfNotExists(topic)
+        if not topic_id:
+            raise ValueError(f"Topic id is None ({topic_id})")
         self.cursor.execute(
             """INSERT INTO subtopics (id, topic_id, name) VALUES 
-            (DEFAULT, %s, %s)""",
+            (DEFAULT, %s, %s) AS item ON DUPLICATE KEY UPDATE name = item.name""",
             (topic_id, name)
         )
         self.db.commit()

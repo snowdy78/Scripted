@@ -49,11 +49,6 @@ def parse_script(topic: str, request: ParseRequestData):
         if not response:
             print("Response is None. Check the URL and try again.")
             return
-        raw_bytes = response.body()
-        html_content = raw_bytes.decode('utf-8', errors='ignore')
-        with open('home.html', 'w', encoding='utf-8') as document:
-            document.write(html_content)
-
         page_cookies: List[pw_sync_api.Cookie] = ctx.cookies()
         csrf_token = next(
             (cookie.get('value')
@@ -66,7 +61,6 @@ def parse_script(topic: str, request: ParseRequestData):
             print(f"Ваш актуальный CSRF-TOKEN: {csrf_token}")
 
             # Получаем чистый контент статьи Wiki
-            html_content = page.content()
             print("HTML-код статьи успешно получен и готов к парсингу контента.")
         else:
             print("\n[ОШИБКА] Токен все еще не найден. Возможно, Яндекс выдал капчу (картинку), которую нужно решить глазами.")
