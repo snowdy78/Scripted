@@ -1,9 +1,11 @@
 # This Python file uses the following encoding: utf-8
 
+from PySide6.QtGui import QCloseEvent
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QPushButton, QLabel
 from components.Dropdown import Dropdown
 from ParseTypes import ParseParams, ParseRequestData
 from ScriptParser import parse_script
+from config import initDatabase, closeDatabase
 
 class MainWindow(QWidget):
     topics = {
@@ -21,7 +23,7 @@ class MainWindow(QWidget):
         super().__init__()
         self.setWindowTitle("Пример с QLineEdit")
         self.resize(800, 600)
-
+        initDatabase()
         # 1. Создаем вертикальный макет (Layout)
         layout = QVBoxLayout()
 
@@ -49,3 +51,7 @@ class MainWindow(QWidget):
         if parse_data is None:
             self.alert_label.setText("Тематика не найдена. Невозможно парсить.")
         parse_script(entered_text, ParseRequestData(parse_data))
+
+    def closeEvent(self, event: QCloseEvent) -> None:
+        closeDatabase()
+        return super().closeEvent(event)

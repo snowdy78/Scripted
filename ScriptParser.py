@@ -3,7 +3,7 @@ from typing import List
 import playwright.sync_api as pw_sync_api
 from playwright.sync_api import sync_playwright
 from ParseTypes import ParseRequestData, Cookie, ParseResponseData
-from config import database
+from config import useDatabase
 
 def parse_script(topic: str, request: ParseRequestData):
     cors_domains = ['.yandex.ru', 'wiki.yandex.ru']
@@ -84,7 +84,7 @@ def parse_script(topic: str, request: ParseRequestData):
             all_text
         )
         # Save parse results to Database
-        database.insertScriptData(
+        useDatabase().insertScriptData(
             response.params.url,
             topic,
             None,
