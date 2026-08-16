@@ -17,6 +17,8 @@ disable=
     duplicate-code,
     dangerous-default-value,
     unknown-option-value,
+    unused-argument,
+    line-too-long
 
 [FORMAT]
 # Match standard PEP 8 formatting preferences
