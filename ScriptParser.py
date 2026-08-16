@@ -1,11 +1,10 @@
-
 from typing import List
 import playwright.sync_api as pw_sync_api
-from playwright.sync_api import sync_playwright
+from playwright.async_api import async_playwright
 from ParseTypes import ParseRequestData, Cookie, ParseResponseData
 from config import useDatabase
 
-def parse_script(topic: str, request: ParseRequestData):
+async def parse_script(topic: str, request: ParseRequestData):
     cors_domains = ['.yandex.ru', 'wiki.yandex.ru']
     url = request.params.url
     if not [i for i in cors_domains if url.find(i) != -1]:
@@ -26,9 +25,9 @@ def parse_script(topic: str, request: ParseRequestData):
         ),
     ]
 
-    with sync_playwright() as pw:
-        browser = pw.chromium.launch(headless=True)
-        ctx = browser.new_context(
+    async with async_playwright() as pw:
+        browser = await pw.chromium.launch(headless=True)
+        ctx = await browser.new_context(
             user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
         )
         cookies_gen = [dict(
@@ -39,17 +38,17 @@ def parse_script(topic: str, request: ParseRequestData):
         ) for c in cookies]
         print("initializing cookies...")
         print(cookies_gen)
-        ctx.add_cookies(cookies_gen) # type: ignore
-        page = ctx.new_page()
+        await ctx.add_cookies(cookies_gen) # type: ignore
+        page = await ctx.new_page()
 
-        response = page.goto(url)
+        response = await page.goto(url)
         wiki_layout_selector = ".WikiPage-Content"
-        page.wait_for_selector(wiki_layout_selector)
+        await page.wait_for_selector(wiki_layout_selector)
 
         if not response:
             print("Response is None. Check the URL and try again.")
             return
-        page_cookies: List[pw_sync_api.Cookie] = ctx.cookies()
+        page_cookies: List[pw_sync_api.Cookie] = await ctx.cookies()
         csrf_token = next(
             (cookie.get('value')
              for cookie in page_cookies if cookie.get('name') == 'CSRF-TOKEN'),
@@ -69,16 +68,16 @@ def parse_script(topic: str, request: ParseRequestData):
                 которую нужно решить глазами."""
             )
             # На всякий случай сохраним скриншот, чтобы увидеть, что сейчас на экране
-            page.screenshot(path="yandex_result.png")
+            await page.screenshot(path="yandex_result.png")
             print("Скриншот экрана сохранен в файл yandex_result.png")
 
-        page.evaluate("""
+        await page.evaluate("""
             () => {
                 document.querySelectorAll('details:not([open])').forEach(el => el.setAttribute('open', ''));
             }
         """)
 
-        all_text = page.locator(wiki_layout_selector).inner_text()
+        all_text = await page.locator(wiki_layout_selector).inner_text()
         response = ParseResponseData(
             request.params,
             all_text
@@ -90,4 +89,4 @@ def parse_script(topic: str, request: ParseRequestData):
             None,
             response.content
         )
-        browser.close()
+        await browser.close()

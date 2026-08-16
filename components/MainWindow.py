@@ -3,9 +3,11 @@
 from PySide6.QtGui import QCloseEvent
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QPushButton, QLabel
 from components.Dropdown import Dropdown
+from components.LoadingWidget import LoadingWidget
 from ParseTypes import ParseParams, ParseRequestData
 from ScriptParser import parse_script
 from config import initDatabase, closeDatabase
+from qasync import QEventLoop, asyncSlot
 
 class MainWindow(QWidget):
     topics = {
@@ -33,24 +35,35 @@ class MainWindow(QWidget):
 
         self.alert_label = QLabel()
         self.alert_label.setStyleSheet("color: #e00;")
+        layout.addWidget(self.alert_label)
         self.button = QPushButton("Parse")
         # 3. Создаем кнопку для считывания текста
+        # pylint: disable=no-member
         self.button.clicked.connect(self.print_text) # Привязываем функцию к клику
         layout.addWidget(self.button) # Добавляем в макет
+
+        self.loading_widget = LoadingWidget()
+        layout.addWidget(self.loading_widget)
 
         # Устанавливаем макет для главного окна
         self.setLayout(layout)
 
-    def print_text(self):
+    @asyncSlot()
+    async def print_text(self):
         # Метод .text() забирает строку из QLineEdit
         line_edit = self.dropdown.lineEdit()
         if line_edit is None:
             return
-        entered_text = line_edit.text()
-        parse_data = self.topics[entered_text]
+        entered_text = line_edit.text().strip()
+        parse_data = self.topics.get(entered_text)
         if parse_data is None:
             self.alert_label.setText("Тематика не найдена. Невозможно парсить.")
-        parse_script(entered_text, ParseRequestData(parse_data))
+            return
+        try:
+            await parse_script(entered_text, ParseRequestData(parse_data))
+        except Exception as e:
+            self.alert_label.setText("Ошибка попробуйте еще раз.")
+            print(e)
 
     def closeEvent(self, event: QCloseEvent) -> None:
         closeDatabase()
