@@ -3,7 +3,7 @@ from typing import List
 import playwright.sync_api as pw_sync_api
 from playwright.sync_api import sync_playwright
 from ParseTypes import ParseRequestData, Cookie, ParseResponseData
-from Database import Database
+from config import database
 
 def parse_script(topic: str, request: ParseRequestData):
     cors_domains = ['.yandex.ru', 'wiki.yandex.ru']
@@ -63,7 +63,11 @@ def parse_script(topic: str, request: ParseRequestData):
             # Получаем чистый контент статьи Wiki
             print("HTML-код статьи успешно получен и готов к парсингу контента.")
         else:
-            print("\n[ОШИБКА] Токен все еще не найден. Возможно, Яндекс выдал капчу (картинку), которую нужно решить глазами.")
+            print(
+                """\n[ОШИБКА] Токен все еще не найден. 
+                Возможно, Яндекс выдал капчу (картинку), 
+                которую нужно решить глазами."""
+            )
             # На всякий случай сохраним скриншот, чтобы увидеть, что сейчас на экране
             page.screenshot(path="yandex_result.png")
             print("Скриншот экрана сохранен в файл yandex_result.png")
@@ -80,11 +84,10 @@ def parse_script(topic: str, request: ParseRequestData):
             all_text
         )
         # Save parse results to Database
-        with Database() as db:
-            db.insertScriptData(
-                response.params.url,
-                topic,
-                None,
-                response.content
-            )
+        database.insertScriptData(
+            response.params.url,
+            topic,
+            None,
+            response.content
+        )
         browser.close()

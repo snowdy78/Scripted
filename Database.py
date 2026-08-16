@@ -1,4 +1,3 @@
-import datetime
 import typing
 import hashlib
 import mysql.connector
