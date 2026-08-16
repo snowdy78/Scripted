@@ -18,7 +18,8 @@ disable=
     dangerous-default-value,
     unknown-option-value,
     unused-argument,
-    line-too-long
+    line-too-long,
+    broad-exception-caught
 
 [FORMAT]
 # Match standard PEP 8 formatting preferences
