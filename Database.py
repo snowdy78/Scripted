@@ -184,15 +184,15 @@ class Database:
         )
         self.db.commit()
 
-    def getScripts(self, filters: list[str], data: tuple[typing.Any]) -> list[Script]:
+    def getScripts(self, filters: list[str], data: tuple[typing.Any, ...]) -> list[Script]:
         return self._get("scripts", filters, data, self._asScript)
 
-    def getTopics(self, filters: list[str], data: tuple[typing.Any]) -> list[Topic]:
+    def getTopics(self, filters: list[str], data: tuple[typing.Any, ...]) -> list[Topic]:
         return self._get("topics", filters, data, self._asTopic)
 
     def getSubtopics(
         self,filters: list[str],
-        data: tuple[typing.Any]
+        data: tuple[typing.Any, ...]
     ) -> list[Subtopic]:
         return self._get("subtopic", filters, data, self._asSubtopic)
 
