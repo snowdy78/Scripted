@@ -24,7 +24,10 @@ class Dropdown(QComboBox):
         self.setPlaceholderText(placeholder) # Текст-подсказка
         if self.items:
             self.addItems(self.items)
-        self.lineEdit().installEventFilter(self)
+        line_edit = self.lineEdit()
+        if line_edit is None:
+            return
+        line_edit.installEventFilter(self)
 
     def eventFilter(self, watched, event):
         # Если кликнули мышкой по текстовому полю ввода
