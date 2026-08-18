@@ -1,8 +1,8 @@
-import json
 import os
-import sys
+import json
+from Config import Config
 
-class Settings:
+class Settings(Config):
     DEFAULT_SETTINGS = {
         "settings": {
             "theme": "Системная",
@@ -15,23 +15,30 @@ class Settings:
             }
         }
     }
-    SETTINGS_PATH = "config/settings.json"
+    SETTINGS_FILE = "settings.json"
+    DUMP_INDENT = 2
+    DUMP_ENSURE_ASCII = False
+
     def __init__(self):
         pass
 
     @staticmethod
+    def filepath():
+        return os.path.join(Config.CONFIG_DIR, Settings.SETTINGS_FILE)
+
+    @staticmethod
     def get():
-        # TODO check if dir not exist
-        with open(Settings.SETTINGS_PATH, "r", encoding="utf-8") as f:
+        Settings._initIfNotExists(Settings.SETTINGS_FILE, Settings.reset)
+        with open(Settings.filepath(), "r", encoding="utf-8") as f:
             return json.load(f)
         raise FileNotFoundError("'settings.json' not found")
 
     @staticmethod
     def save(settings):
-        with open(Settings.SETTINGS_PATH, "w", encoding="utf-8") as f:
-            json.dump(settings, f, indent=4, ensure_ascii=False)
+        with open(Settings.filepath(), "w", encoding="utf-8") as f:
+            json.dump(settings, f, indent=Settings.DUMP_INDENT, ensure_ascii=Settings.DUMP_ENSURE_ASCII)
 
     @staticmethod
     def reset():
-        with open(Settings.SETTINGS_PATH, "w", encoding="utf-8") as f:
-            json.dump(Settings.DEFAULT_SETTINGS, f, indent=4, ensure_ascii=False)
+        with open(Settings.filepath(), "w", encoding="utf-8") as f:
+            json.dump(Settings.DEFAULT_SETTINGS, f, indent=Settings.DUMP_INDENT, ensure_ascii=Settings.DUMP_ENSURE_ASCII)
