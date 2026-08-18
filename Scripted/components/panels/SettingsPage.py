@@ -1,7 +1,7 @@
 from PySide6.QtWidgets import QComboBox, QLabel, QLineEdit, QPushButton, QWidget, QGridLayout
 from PySide6.QtCore import Qt
 from qasync import asyncSlot
-from Settings import Settings
+from Scripted.Settings import Settings
 
 class SettingsPage(QWidget):
     THEME_VALUES = ["Темная", "Светлая", "Системная"]

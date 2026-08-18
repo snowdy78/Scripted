@@ -1,9 +1,9 @@
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QPushButton, QLabel
 from qasync import asyncSlot
-from ParseTypes import ParseRequestData, ParseParams
-from ScriptParser import findScriptOrParse
-from components.Dropdown import Dropdown
-from components.LoadingWidget import LoadingWidget
+from Scripted.ParseTypes import ParseRequestData, ParseParams
+from Scripted.ScriptParser import findScriptOrParse
+from Scripted.components.Dropdown import Dropdown
+from Scripted.components.LoadingWidget import LoadingWidget
 
 class FindScriptPage(QWidget):
     topics = {

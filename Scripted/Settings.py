@@ -1,6 +1,6 @@
 import os
 import json
-from Config import Config
+from Scripted.Config import Config
 
 class Settings(Config):
     DEFAULT_SETTINGS = {

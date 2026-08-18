@@ -2,12 +2,12 @@
 
 from PySide6.QtGui import QCloseEvent
 from PySide6.QtWidgets import QWidget, QHBoxLayout, QStackedWidget
-from components.panels.UploadKnowledgeBasePage import UploadKnowledgeBasePage
 from config import initDatabase, closeDatabase
-from components.panels.FindScriptPage import FindScriptPage
-from components.panels.SettingsPage import SettingsPage
-from components.panels.AskAiPage import AskAiPage
-from components.PagesList import PagesList
+from Scripted.components.panels.UploadKnowledgeBasePage import UploadKnowledgeBasePage
+from Scripted.components.panels.FindScriptPage import FindScriptPage
+from Scripted.components.panels.SettingsPage import SettingsPage
+from Scripted.components.panels.AskAiPage import AskAiPage
+from Scripted.components.PagesList import PagesList
 
 class MainWindow(QWidget):
     def __init__(self):

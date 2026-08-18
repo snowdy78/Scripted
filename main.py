@@ -3,7 +3,7 @@ import sys
 import asyncio
 from qasync import QEventLoop
 from PySide6.QtWidgets import QApplication
-from components.MainWindow import MainWindow
+from Scripted.components.MainWindow import MainWindow
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)

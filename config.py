@@ -1,4 +1,4 @@
-from Database import Database
+from Scripted.Database import Database
 
 _database: Database | None = None
 

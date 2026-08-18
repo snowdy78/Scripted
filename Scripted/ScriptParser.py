@@ -2,7 +2,7 @@ import datetime
 from typing import List
 import playwright.sync_api as pw_sync_api
 from playwright.async_api import async_playwright
-from ParseTypes import ParseRequestData, Cookie, ParseResponseData, Script
+from Scripted.ParseTypes import ParseRequestData, Cookie, ParseResponseData, Script
 from config import useDatabase
 
 async def findScriptOrParse(topic: str, subtopic: str | None, request: ParseRequestData) -> Script:

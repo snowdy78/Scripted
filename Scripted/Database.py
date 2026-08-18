@@ -1,15 +1,16 @@
 import typing
 import hashlib
 import mysql.connector
-from ParseTypes import Script, Topic, Subtopic
-from Settings import Settings
+from Scripted.ParseTypes import Script, Topic, Subtopic
+from Scripted.Settings import Settings
 
 
 def hashUrl(url: str):
     return hashlib.sha1(url.encode("utf-8")).hexdigest()
 
-
 class Database:
+    instance = None
+
     def __init__(self):
         db_settings = Settings.get()["settings"]["database"]
         self.db = mysql.connector.connect(
