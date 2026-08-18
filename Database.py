@@ -2,22 +2,22 @@ import typing
 import hashlib
 import mysql.connector
 from ParseTypes import Script, Topic, Subtopic
+from Settings import Settings
+
 
 def hashUrl(url: str):
     return hashlib.sha1(url.encode("utf-8")).hexdigest()
 
 
 class Database:
-    HOST = "localhost"
-    USER = "root"
-    PASSWORD = ""
-    DATABASE = "scripted"
     def __init__(self):
+        db_settings = Settings.get()["settings"]["database"]
         self.db = mysql.connector.connect(
-            host = self.HOST,
-            user = self.USER,
-            password = self.PASSWORD,
-            database = self.DATABASE
+            host = db_settings["host"],
+            port = db_settings["port"],
+            user = db_settings["user"],
+            password = db_settings["password"],
+            database = db_settings["database"],
         )
         self.cursor = self.db.cursor()
         self.cursor.execute("""

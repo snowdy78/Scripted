@@ -5,7 +5,7 @@ from ScriptParser import findScriptOrParse
 from components.Dropdown import Dropdown
 from components.LoadingWidget import LoadingWidget
 
-class FindScriptPanel(QWidget):
+class FindScriptPage(QWidget):
     topics = {
         "Мобильная карта": ParseParams('https://wiki.yandex.ru/homepage/1d169aa832c9/proekty-ogl/mobilnaja-karta-1/'),
         "Агророс Банк": ParseParams('https://wiki.yandex.ru/homepage/1d169aa832c9/proekty-ogl/agroros-bank/'),

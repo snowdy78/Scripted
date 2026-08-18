@@ -1,6 +1,6 @@
 from PySide6.QtWidgets import QListWidget, QVBoxLayout
 
-class PanelList(QListWidget):
+class PagesList(QListWidget):
     def __init__(self, panels, parent=None):
         super().__init__(parent)
         layout = QVBoxLayout()
