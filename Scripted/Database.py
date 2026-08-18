@@ -9,16 +9,13 @@ def hashUrl(url: str):
     return hashlib.sha1(url.encode("utf-8")).hexdigest()
 
 class Database:
-    instance = None
-
-    def __init__(self):
-        db_settings = Settings.get()["settings"]["database"]
+    def __init__(self, host, port, user, password, name_database):
         self.db = mysql.connector.connect(
-            host = db_settings["host"],
-            port = db_settings["port"],
-            user = db_settings["user"],
-            password = db_settings["password"],
-            database = db_settings["database"],
+            host = host,
+            port = port,
+            user = user,
+            password = password,
+            database=name_database,
         )
         self.cursor = self.db.cursor()
         self.cursor.execute("""
@@ -47,6 +44,7 @@ class Database:
             );
         """)
         self.db.commit()
+        print("Database initialized!")
 
     @staticmethod
     def _asScript(db_script) -> Script:
@@ -200,9 +198,25 @@ class Database:
     def close(self):
         self.cursor.close()
         self.db.close()
+        print("Database connection closed")
 
     def __enter__(self):
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.close()
+
+    def __del__(self):
+        self.close()
+
+class DatabaseLocalConfiguration(Database):
+    def __init__(self):
+        local_config = Settings.get()["settings"]["database"]
+        host = local_config["host"]
+        port = local_config["port"]
+        user = local_config["user"]
+        password = local_config["password"]
+        name_database = local_config["database"]
+        super().__init__(host, port, user, password, name_database)
+
+database = DatabaseLocalConfiguration()

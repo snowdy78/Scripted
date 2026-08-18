@@ -1,8 +1,5 @@
-# This Python file uses the following encoding: utf-8
-
 from PySide6.QtGui import QCloseEvent
 from PySide6.QtWidgets import QWidget, QHBoxLayout, QStackedWidget
-from config import initDatabase, closeDatabase
 from Scripted.components.panels.UploadKnowledgeBasePage import UploadKnowledgeBasePage
 from Scripted.components.panels.FindScriptPage import FindScriptPage
 from Scripted.components.panels.SettingsPage import SettingsPage
@@ -14,11 +11,9 @@ class MainWindow(QWidget):
         super().__init__()
         self.setWindowTitle("Пример с QLineEdit")
         self.resize(800, 600)
-        initDatabase()
         # 1. Создаем вертикальный макет (Layout)
         main_layout = QHBoxLayout()
         # 2. Создаем список панелей
-
         panels = ["Обновление данных", "Ai", "Загрузка", "Настройки", "Выход"]
         # 3. Добавляем в макет список панелей
         self.panel_list = PagesList(panels)
@@ -43,5 +38,4 @@ class MainWindow(QWidget):
         self.stacked_widget.setCurrentIndex(index)
 
     def closeEvent(self, event: QCloseEvent) -> None:
-        closeDatabase()
         return super().closeEvent(event)

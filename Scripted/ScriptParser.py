@@ -3,23 +3,23 @@ from typing import List
 import playwright.sync_api as pw_sync_api
 from playwright.async_api import async_playwright
 from Scripted.ParseTypes import ParseRequestData, Cookie, ParseResponseData, Script
-from config import useDatabase
+from Scripted.Database import database
 
 async def findScriptOrParse(topic: str, subtopic: str | None, request: ParseRequestData) -> Script:
     if not topic:
         raise ValueError("Cannot find or push script without topic.")
-    topic_id = useDatabase().getTopicIdIfNotExists(topic)
+    topic_id = database.getTopicIdIfNotExists(topic)
     if topic_id is None:
         await parse_script(topic, request)
         return await findScriptOrParse(topic, subtopic, request)
-    subtopic_id = useDatabase().getSubtopicIdIfNotExists(subtopic, topic_id)
+    subtopic_id = database.getSubtopicIdIfNotExists(subtopic, topic_id)
     filters = ["topic_id=%s"]
     if subtopic_id is not None:
         filters.append("subtopic_id=%s")
-    scripts = useDatabase().getScripts(filters, (topic_id, ) if subtopic_id is None else (topic_id, subtopic_id))
+    scripts = database.getScripts(filters, (topic_id, ) if subtopic_id is None else (topic_id, subtopic_id))
     if  len(scripts) < 1 or datetime.datetime.now() - scripts[0].date_parsed > datetime.timedelta(days=1):
         await parse_script(topic, request)
-    scripts = useDatabase().getScripts(filters, (topic_id, ) if subtopic_id is None else (topic_id, subtopic_id))
+    scripts = database.getScripts(filters, (topic_id, ) if subtopic_id is None else (topic_id, subtopic_id))
     if len(scripts) < 1:
         raise ValueError("Cannot find script.")
     return scripts[0]
@@ -103,7 +103,7 @@ async def parse_script(topic: str, request: ParseRequestData):
             all_text
         )
         # Save parse results to Database
-        useDatabase().insertScriptData(
+        database.insertScriptData(
             response.params.url,
             topic,
             None,
