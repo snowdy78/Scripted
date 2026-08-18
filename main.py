@@ -13,4 +13,3 @@ if __name__ == "__main__":
     window.show()
     with loop:
         loop.run_forever()
-    sys.exit(app.exec())
