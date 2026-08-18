@@ -206,9 +206,6 @@ class Database:
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.close()
 
-    def __del__(self):
-        self.close()
-
 class DatabaseLocalConfiguration(Database):
     def __init__(self):
         local_config = Settings.get()["settings"]["database"]
