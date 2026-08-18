@@ -1,10 +1,13 @@
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QLineEdit, QLabel
 
 class AskAiPage(QWidget):
+    class AiAnswerLabel(QLabel):
+        pass
+
     def __init__(self):
         super().__init__()
         layout = QVBoxLayout()
-        self.answer_label = QLabel()
+        self.answer_label = AskAiPage.AiAnswerLabel("text")
         self.line_edit = QLineEdit()
         self.line_edit.setPlaceholderText("Спроси ИИ!")
         # pylint: disable=no-member
